@@ -10,6 +10,7 @@ public class KarakterKontrol : MonoBehaviour
     bool Zemindemi = false;
     BoxCollider2D _boxCollider;
 
+
     [SerializeField] LayerMask ZeminLayer;
     void Start()
     {
@@ -26,12 +27,18 @@ public class KarakterKontrol : MonoBehaviour
         bool Yuruyormu = false;
 
         float x = Input.GetAxis("Horizontal");
-
+        int onuDolumu = OnuDolumu();
         if (x != 0.0f)
         {
-            float yercekimiY = _rb.linearVelocityY;
-            _rb.linearVelocity = Vector2.right * x * HizCarpani + new Vector2(0.0f, yercekimiY);
-            Yuruyormu = true;
+            Debug.Log("dolumu" + onuDolumu);
+            Debug.Log("x:" + x);
+            if ((x > 0 && onuDolumu != 1) || (x < 0 && onuDolumu != -1))
+            {
+
+                _rb.linearVelocityX = (Vector2.right * x * HizCarpani).x;
+                Yuruyormu = true;
+            }
+
             _renderer.flipX = false;
             if (x < 0.0f)
             {
@@ -44,24 +51,48 @@ public class KarakterKontrol : MonoBehaviour
         }
         _animator.SetBool("YuruyorMu", Yuruyormu);
         ZiplamaKontrol();
-        ZeminKontrol();
+
 
     }
 
+    int OnuDolumu()
+    {
 
+        var origin = _boxCollider.bounds.center;
+        var halfsize = _boxCollider.bounds.size * 0.5f;
+        var size = _boxCollider.bounds.size;
+
+        var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.right, halfsize.x + 0.1f, ZeminLayer);
+
+        if (carpisma)
+        {
+            return 1;
+        }
+
+        carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.left, halfsize.x + 0.1f, ZeminLayer);
+
+        if (carpisma)
+        {
+            return -1;
+        }
+
+        return 0;
+    }
     void ZiplamaKontrol()
     {
         bool Zipladimi = false;
         bool Dusuyormu = false;
+        Zemindemi = ZemindemiKontrol();
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && Zemindemi)
         {
             Zipladimi = true;
             Zemindemi = false;
+
             _rb.AddForce(Vector2.up * SicramaHizi, ForceMode2D.Impulse);
         }
 
-
+        Zemindemi = ZemindemiKontrol();
         if (!Zemindemi)
         {
 
@@ -73,6 +104,7 @@ public class KarakterKontrol : MonoBehaviour
             }
             else
             {
+                Zipladimi = true;
                 Dusuyormu = false;
             }
         }
@@ -82,20 +114,55 @@ public class KarakterKontrol : MonoBehaviour
         _animator.SetBool("ZemindeMi", Zemindemi);
 
     }
-    public bool ZeminKontrol()
+    void OnDrawGizmos()
     {
-        bool Zemindemi = false;
         var origin = _boxCollider.bounds.center;
         var halfsize = _boxCollider.bounds.size * 0.5f;
-        var carpisma = Physics2D.Raycast(origin, Vector2.down, halfsize.y + 0.01f, ZeminLayer);
-        if (carpisma)
+        if (Zemindemi)
         {
-            Debug.DrawLine(origin, origin + new Vector3(0.0f, -halfsize.y - 0.005f, 0.0f), Color.red);
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),
+                            new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
+            //Gizmos.DrawCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
+            //Gizmos.DrawLine(origin,origin + new Vector3(0.0f,-halfsize.y - 0.05f, 0.0f));
+            Zemindemi = true;
         }
         else
         {
-            Debug.DrawLine(origin, origin + new Vector3(0.0f, -halfsize.y - 0.005f, 0.0f), Color.green);
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),
+                             new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
         }
+        if (OnuDolumu() == 1)
+        {
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(origin + new Vector3(halfsize.x * 0.5f, 0.0f, 0.0f),
+                            new Vector3(halfsize.x, halfsize.y * 2, 0.02f));
+
+        }
+        else if (OnuDolumu() == -1)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(origin + new Vector3(-halfsize.x * 0.5f, 0.0f, 0.0f),
+                            new Vector3(halfsize.x, halfsize.y * 2, 0.02f));
+        }
+
+
+    }
+    public bool ZemindemiKontrol()
+    {
+        Zemindemi = false;
+        var origin = _boxCollider.bounds.center;
+        var halfsize = _boxCollider.bounds.size * 0.5f;
+        var size = _boxCollider.bounds.size;
+        //var carpisma = Physics2D.Raycast(origin, Vector2.down, halfsize.y + 0.05f, ZeminLayer);
+        var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.down, halfsize.y + 0.05f, ZeminLayer);
+        if (carpisma)
+        {
+            Zemindemi = true;
+        }
+
         return Zemindemi;
     }
 }
