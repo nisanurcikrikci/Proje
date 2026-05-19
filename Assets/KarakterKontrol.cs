@@ -30,9 +30,8 @@ public class KarakterKontrol : MonoBehaviour
         int onuDolumu = OnuDolumu();
         if (x != 0.0f)
         {
-            Debug.Log("dolumu" + onuDolumu);
-            Debug.Log("x:" + x);
-            if ((x > 0 && onuDolumu != 1) || (x < 0 && onuDolumu != -1))
+
+            if ((x < 0 && onuDolumu != -1) || (x > 0 && onuDolumu != 1))
             {
 
                 _rb.linearVelocityX = (Vector2.right * x * HizCarpani).x;
@@ -60,7 +59,7 @@ public class KarakterKontrol : MonoBehaviour
 
         var origin = _boxCollider.bounds.center;
         var halfsize = _boxCollider.bounds.size * 0.5f;
-        var size = _boxCollider.bounds.size;
+        var size = _boxCollider.bounds.size * 0.8f;
 
         var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.right, halfsize.x + 0.1f, ZeminLayer);
 
@@ -84,15 +83,20 @@ public class KarakterKontrol : MonoBehaviour
         bool Dusuyormu = false;
         Zemindemi = ZemindemiKontrol();
 
-        if (Input.GetKeyDown(KeyCode.Space) && Zemindemi)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            Zipladimi = true;
-            Zemindemi = false;
+            if (Zemindemi)
+            {
+                _rb.AddForce(Vector2.up * SicramaHizi, ForceMode2D.Impulse);
+                Zipladimi = true;
+                Zemindemi = false;
+            }
 
-            _rb.AddForce(Vector2.up * SicramaHizi, ForceMode2D.Impulse);
+
+
         }
 
-        Zemindemi = ZemindemiKontrol();
+
         if (!Zemindemi)
         {
 
@@ -152,17 +156,17 @@ public class KarakterKontrol : MonoBehaviour
     }
     public bool ZemindemiKontrol()
     {
-        Zemindemi = false;
+        bool zemindemi = false;
         var origin = _boxCollider.bounds.center;
         var halfsize = _boxCollider.bounds.size * 0.5f;
         var size = _boxCollider.bounds.size;
-        //var carpisma = Physics2D.Raycast(origin, Vector2.down, halfsize.y + 0.05f, ZeminLayer);
+
         var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.down, halfsize.y + 0.05f, ZeminLayer);
         if (carpisma)
         {
-            Zemindemi = true;
+            zemindemi = true;
         }
 
-        return Zemindemi;
+        return zemindemi;
     }
 }
