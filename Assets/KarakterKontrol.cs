@@ -3,6 +3,7 @@ using UnityEngine;
 public class KarakterKontrol : MonoBehaviour
 {
     [SerializeField] float SicramaHizi = 7.0f;
+    [SerializeField] GameObject OlumAnimasyonSablonu;
     Rigidbody2D _rb;
     Animator _animator;
     SpriteRenderer _renderer;
@@ -59,16 +60,15 @@ public class KarakterKontrol : MonoBehaviour
 
         var origin = _boxCollider.bounds.center;
         var halfsize = _boxCollider.bounds.size * 0.5f;
-        var size = _boxCollider.bounds.size * 0.8f;
+        var size = new Vector3(_boxCollider.bounds.size.x * 0.4f, _boxCollider.bounds.size.y * 0.5f, 0.02f);
 
-        var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.right, halfsize.x + 0.1f, ZeminLayer);
-
+        var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.right, halfsize.x + 0.01f, ZeminLayer);
         if (carpisma)
         {
             return 1;
         }
 
-        carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.left, halfsize.x + 0.1f, ZeminLayer);
+        carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.left, halfsize.x + 0.01f, ZeminLayer);
 
         if (carpisma)
         {
@@ -76,6 +76,38 @@ public class KarakterKontrol : MonoBehaviour
         }
 
         return 0;
+    }
+    void OnDrawGizmos()
+    {
+        if (_boxCollider == null) return;
+        var origin = _boxCollider.bounds.center;
+        var halfsize = _boxCollider.bounds.size * 0.5f;
+        var gizoSize = new Vector3(_boxCollider.bounds.size.x * 0.4f, _boxCollider.bounds.size.y * 0.5f, 0.02f);
+        if (Zemindemi)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),
+                            new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
+            //Gizmos.DrawCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
+            //Gizmos.DrawLine(origin,origin + new Vector3(0.0f,-halfsize.y - 0.05f, 0.0f));
+            Zemindemi = true;
+        }
+        else
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(origin + Vector3.right * (halfsize.x + 0.01f), gizoSize);
+        }
+        if (OnuDolumu() == 1)
+        {
+
+            Gizmos.color = Color.red; // Engel varsa kırmızı yanar
+            Gizmos.DrawWireCube(origin + Vector3.right * (halfsize.x + 0.05f), _boxCollider.bounds.size * 0.6f);
+        }
+        else if (OnuDolumu() == -1)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(origin + Vector3.left * (halfsize.x + 0.01f), gizoSize);
+        }
     }
     void ZiplamaKontrol()
     {
@@ -118,53 +150,42 @@ public class KarakterKontrol : MonoBehaviour
         _animator.SetBool("ZemindeMi", Zemindemi);
 
     }
-    void OnDrawGizmos()
-    {
-        var origin = _boxCollider.bounds.center;
-        var halfsize = _boxCollider.bounds.size * 0.5f;
-        if (Zemindemi)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),
-                            new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
-            //Gizmos.DrawCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
-            //Gizmos.DrawLine(origin,origin + new Vector3(0.0f,-halfsize.y - 0.05f, 0.0f));
-            Zemindemi = true;
-        }
-        else
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(origin + new Vector3(0.0f, -halfsize.y * 0.5f, 0.0f),
-                             new Vector3(halfsize.x * 2, halfsize.y, 0.02f));
-        }
-        if (OnuDolumu() == 1)
-        {
-
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(origin + new Vector3(halfsize.x * 0.5f, 0.0f, 0.0f),
-                            new Vector3(halfsize.x, halfsize.y * 2, 0.02f));
-
-        }
-        else if (OnuDolumu() == -1)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(origin + new Vector3(-halfsize.x * 0.5f, 0.0f, 0.0f),
-                            new Vector3(halfsize.x, halfsize.y * 2, 0.02f));
-        }
 
 
-    }
+
+
     public bool ZemindemiKontrol()
     {
         bool zemindemi = false;
         var origin = _boxCollider.bounds.center;
         var halfsize = _boxCollider.bounds.size * 0.5f;
         var size = _boxCollider.bounds.size;
+        var carpismaSize = halfsize;
+        carpismaSize.y *= 0.25f;
 
-        var carpisma = Physics2D.BoxCast(origin, size, 0.0f, Vector2.down, halfsize.y + 0.05f, ZeminLayer);
-        if (carpisma)
+        var carpismalar = Physics2D.BoxCastAll(origin + new Vector3(0.0f, -halfsize.y * 0.075f, 0.0f),
+                                                new Vector3(halfsize.x * 2 * 0.8f, halfsize.y * 0.5f, 0.02f),
+                                                0.0f, Vector2.down, halfsize.y + 0.05f);
+        if (carpismalar.Length > 0)
         {
-            zemindemi = true;
+            foreach (var siradakiCarpisma in carpismalar)
+            {
+                if (siradakiCarpisma.collider.name == "Zemin")
+                {
+                    zemindemi = true;
+                }
+                if (siradakiCarpisma.collider.name == "Tepe")
+                {
+                    Destroy(siradakiCarpisma.collider.transform.parent.gameObject);
+                    _rb.AddForce(Vector2.up * SicramaHizi, ForceMode2D.Impulse);
+                    _animator.SetBool("ZipladiMi", true);
+                    Zemindemi = false;
+                    Instantiate(OlumAnimasyonSablonu).transform.position = siradakiCarpisma.collider.transform.position;
+                }
+
+            }
+
+
         }
 
         return zemindemi;

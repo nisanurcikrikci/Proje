@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class KurbagaAnimationKod : MonoBehaviour
+public class DeathAnimationKod : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -8,11 +8,10 @@ public class KurbagaAnimationKod : MonoBehaviour
 
     }
 
-    public void ZiplamaBitti()
+    public void YokEt()
     {
-        transform.parent.Rotate(0.0f, -180.0f, 0.0f);
+        Destroy(gameObject);
     }
-    // Update is called once per frame
     void Update()
     {
 
