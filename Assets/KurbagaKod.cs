@@ -89,10 +89,7 @@ public class KurbagaKod : MonoBehaviour
                     zemindemi = true;
 
                 }
-                if (siradakiCarpisma.collider.name == "Player")
-                {
-                    Destroy(siradakiCarpisma.collider.gameObject);
-                }
+
 
             }
         }
@@ -100,4 +97,20 @@ public class KurbagaKod : MonoBehaviour
 
         return zemindemi;
     }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // Eğer çarpan nesne Oyuncu (Tilki) ise VE kaplumbağa şu an kabukta DEĞİLSE
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            // Oyuncunun üzerindeki KarakterKontrol koduna ulaşıyoruz
+            KarakterKontrol oyuncu = collision.gameObject.GetComponent<KarakterKontrol>();
+
+            if (oyuncu != null)
+            {
+                // Oyuncunun hasar alma fonksiyonunu çağır!
+                oyuncu.HasarAl();
+            }
+        }
+    }
 }
+

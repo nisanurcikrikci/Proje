@@ -9,6 +9,9 @@ public class KarakterKontrol : MonoBehaviour
     SpriteRenderer _renderer;
     float HizCarpani = 10.0f;
     bool Zemindemi = false;
+    public bool GizlendiMi = false;
+    private bool cimenIcindeMi = false;
+    private bool ComeldiMi = false;
     BoxCollider2D _boxCollider;
 
 
@@ -51,7 +54,16 @@ public class KarakterKontrol : MonoBehaviour
         }
         _animator.SetBool("YuruyorMu", Yuruyormu);
         ZiplamaKontrol();
-
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            ComeldiMi = true;
+        }
+        else
+        {
+            ComeldiMi = false;
+        }
+        _animator.SetBool("ComeldiMi", ComeldiMi);
+        GizlilikKontrolu();
 
     }
 
@@ -170,18 +182,41 @@ public class KarakterKontrol : MonoBehaviour
         {
             foreach (var siradakiCarpisma in carpismalar)
             {
-                if (siradakiCarpisma.collider.name == "Zemin")
+                if (siradakiCarpisma.collider.tag == "Zemin")
                 {
                     zemindemi = true;
                 }
-                if (siradakiCarpisma.collider.name == "Tepe")
+                if (siradakiCarpisma.collider.tag == "Tepe")
                 {
-                    Destroy(siradakiCarpisma.collider.transform.parent.gameObject);
-                    _rb.AddForce(Vector2.up * SicramaHizi, ForceMode2D.Impulse);
+                    // Bastığımız düşmanın ana gövdesinde kaplumbağa kodu var mı kontrol et
+                    KaplumbagaKod kaplumbaga = siradakiCarpisma.collider.GetComponentInParent<KaplumbagaKod>();
+
+                    if (kaplumbaga != null)
+                    {
+                        // EĞER KAPLUMBAĞAYSA: Onu yok etme, sadece kabuğuna çekilme fonksiyonunu çağır!
+                        kaplumbaga.KabugaCekil();
+                    }
+                    else
+                    {
+                        // EĞER DİĞER DÜŞMANLARSA (Kartal, Opossum vb.): Eskisi gibi direkt yok et ve efekt çıkar
+                        Destroy(siradakiCarpisma.collider.transform.parent.gameObject);
+
+                        if (OlumAnimasyonSablonu != null)
+                        {
+                            Instantiate(OlumAnimasyonSablonu).transform.position = siradakiCarpisma.collider.transform.position;
+                        }
+                    }
+
+
+
+
+
+                    _rb.linearVelocityY = 6.0f;
                     _animator.SetBool("ZipladiMi", true);
                     Zemindemi = false;
-                    Instantiate(OlumAnimasyonSablonu).transform.position = siradakiCarpisma.collider.transform.position;
+
                 }
+
 
             }
 
@@ -189,5 +224,49 @@ public class KarakterKontrol : MonoBehaviour
         }
 
         return zemindemi;
+    }
+    // Kaplumbağa veya diğer düşmanlar çarptığında tetiklenecek hasar fonksiyonu
+    public void HasarAl()
+    {
+        // Animator'deki hasar alma tetikleyicisini (Trigger) ateşle
+        _animator.SetBool("HasarAl", true);
+
+        // İsteğe bağlı: Hasar alınca tilkiyi hafifçe geriye ve yukarı doğru fırlatmak istersen:
+        _rb.linearVelocity = Vector2.zero; // Mevcut hızını sıfırla
+
+        // Eğer sola bakıyorsa sağa, sağa bakıyorsa sola doğru geri fırlasın
+        float firlamaYonu = _renderer.flipX ? 3.0f : -3.0f;
+        _rb.linearVelocity = new Vector2(firlamaYonu, 5.0f);
+    }
+    void OnTriggerEnter2D(Collider2D other)
+    {
+
+        if (other.CompareTag("Cimen"))
+        {
+            cimenIcindeMi = true;
+
+        }
+    }
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Cimen"))
+        {
+            cimenIcindeMi = false;
+            GizlendiMi = false; // Çimenden çıkınca otomatik görünür olur
+        }
+    }
+    private void GizlilikKontrolu()
+    {
+        if (cimenIcindeMi && ComeldiMi)
+        {
+            GizlendiMi = true;
+
+            _renderer.color = new Color(1f, 1f, 1f, 0.5f);
+        }
+        else
+        {
+            GizlendiMi = false;
+            _renderer.color = new Color(1f, 1f, 1f, 1f);
+        }
     }
 }

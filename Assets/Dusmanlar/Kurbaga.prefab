@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6751080524515549712}
   m_Layer: 0
   m_Name: Tepe
-  m_TagString: Untagged
+  m_TagString: Tepe
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
